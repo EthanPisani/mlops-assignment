@@ -8,7 +8,7 @@ from datetime import datetime
 import whylogs as why
 
 # === Load MLflow model ===
-MODEL_URI = "runs:/914d77735b1d488aabc0f95a22b7ea58/random_forest_model"
+MODEL_URI = "mlruns/176985576620168457/models/m-b69e7559fbd04823b52d46c3ad0fd693/artifacts"
 model = mlflow.pyfunc.load_model(MODEL_URI)
 
 # === Initialize WhyLogs logger ===
