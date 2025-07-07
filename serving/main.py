@@ -61,9 +61,8 @@ def validate_category(value: str, valid_list: List[str], field_name: str):
 
 # health check endpoint
 @app.get("/health")
-async def health_check():
-    return {"status": "ok", "model_uri": MODEL_URI, "timestamp": datetime.now().isoformat()}
-
+async def health():
+    return {"status": "ok"}
 @app.post("/predict")
 async def predict_price(car_input: CarInput):
     try:
