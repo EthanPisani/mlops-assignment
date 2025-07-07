@@ -1,0 +1,14 @@
+artifact_uri: file:///mnt/m2kingston/dev/ai/CIBC/mlops-assignment/mlruns/176985576620168457/886b00be5c474d20b06ed2d6c5bac1de/artifacts
+end_time: 1751917742087
+entry_point_name: ''
+experiment_id: '176985576620168457'
+lifecycle_stage: active
+run_id: 886b00be5c474d20b06ed2d6c5bac1de
+run_name: clumsy-stoat-665
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751917739628
+status: 3
+tags: []
+user_id: redzuzu

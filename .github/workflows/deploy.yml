@@ -1,0 +1,49 @@
+name: FastAPI Inference CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image
+      run: docker build -t car-inference-api ./serving
+
+    - name: Run container
+      run: docker run -d -p 4723:4723 --name car-api car-inference-api
+
+    - name: Wait for API to be ready with health check at /health
+      run: |
+        for i in {1..10}; do
+          curl -s http://localhost:4723/health && break || sleep 3
+        done
+
+    - name: Test prediction endpoint
+      run: |
+        sleep 5  # give it a second just in case
+        curl -X 'POST' \
+        'http://localhost:4723/predict' \
+        -H 'accept: application/json' \
+        -H 'Content-Type: application/json' \
+        -d '{ \
+        "month": 5, \
+        "year": 2020, \
+        "power_kw": 100, \
+        "power_ps": 104, \
+        "fuel_consumption_l_100km": 6.5, \
+        "fuel_consumption_g_km": 150, \
+        "mileage_in_km": 350430, \
+        "brand": "bmw", \
+        "fuel_type": "Petrol", \
+        "transmission_type": "Manual", \
+        "color": "red" \
+        }'

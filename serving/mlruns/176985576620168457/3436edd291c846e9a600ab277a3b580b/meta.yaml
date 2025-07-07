@@ -1,0 +1,14 @@
+artifact_uri: file:///mnt/m2kingston/dev/ai/CIBC/mlops-assignment/mlruns/176985576620168457/3436edd291c846e9a600ab277a3b580b/artifacts
+end_time: 1751917715155
+entry_point_name: ''
+experiment_id: '176985576620168457'
+lifecycle_stage: active
+run_id: 3436edd291c846e9a600ab277a3b580b
+run_name: thoughtful-cub-400
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751917714050
+status: 4
+tags: []
+user_id: redzuzu

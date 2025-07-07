@@ -1,0 +1,10 @@
+artifact_location: file:///mnt/m2kingston/dev/ai/CIBC/mlops-assignment/mlruns/176985576620168457/models/m-0d487ed6e96e45818482e209fd14abd1/artifacts
+creation_timestamp: 1751917740733
+experiment_id: '176985576620168457'
+last_updated_timestamp: 1751917742085
+model_id: m-0d487ed6e96e45818482e209fd14abd1
+model_type: null
+name: random_forest_model
+source_run_id: 886b00be5c474d20b06ed2d6c5bac1de
+status: 2
+status_message: null

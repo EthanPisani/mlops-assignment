@@ -1,0 +1,14 @@
+artifact_uri: file:///mnt/m2kingston/dev/ai/CIBC/mlops-assignment/mlruns/176985576620168457/914d77735b1d488aabc0f95a22b7ea58/artifacts
+end_time: 1751917949353
+entry_point_name: ''
+experiment_id: '176985576620168457'
+lifecycle_stage: active
+run_id: 914d77735b1d488aabc0f95a22b7ea58
+run_name: skittish-ray-848
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751917946823
+status: 3
+tags: []
+user_id: redzuzu

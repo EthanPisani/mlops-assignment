@@ -1,0 +1,22 @@
+artifact_path: file:///mnt/m2kingston/dev/ai/CIBC/mlops-assignment/mlruns/176985576620168457/models/m-0d487ed6e96e45818482e209fd14abd1/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.11.7
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.7.0
+mlflow_version: 3.1.1
+model_id: m-0d487ed6e96e45818482e209fd14abd1
+model_size_bytes: 5568235
+model_uuid: m-0d487ed6e96e45818482e209fd14abd1
+prompts: null
+run_id: 886b00be5c474d20b06ed2d6c5bac1de
+utc_time_created: '2025-07-07 19:49:00.737113'

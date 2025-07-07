@@ -1,0 +1,6 @@
+artifact_location: file:///mnt/m2kingston/dev/ai/CIBC/mlops-assignment/mlruns/176985576620168457
+creation_time: 1751917654105
+experiment_id: '176985576620168457'
+last_update_time: 1751917654105
+lifecycle_stage: active
+name: Car_Price_Random_Forest
