@@ -1,20 +1,22 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-from typing import List, Union
+from typing import List
 import pandas as pd
 import mlflow.pyfunc
 import logging
-from datetime import datetime
-import whylogs as why
+from datetime import datetime, timezone
+import json
+from evidently import Dataset
+from evidently import DataDefinition
+from evidently import Report
+from evidently.presets import DataDriftPreset, DataSummaryPreset 
 
 # === Load MLflow model ===
 MODEL_URI = "mlruns/176985576620168457/models/m-b69e7559fbd04823b52d46c3ad0fd693/artifacts"
 model = mlflow.pyfunc.load_model(MODEL_URI)
 
-# === Initialize WhyLogs logger ===
-why_logger = why.logger(log_args={"dataset_id": "car_price_inference"})
-
-# === Define categories ===
+# === Define constants ===
 KNOWN_BRANDS = [
     "aston-martin", "audi", "bentley", "bmw", "cadillac", "chevrolet", "chrysler", "citroen", "dacia", "daewoo",
     "daihatsu", "dodge", "ferrari", "fiat", "ford", "honda", "hyundai", "infiniti", "isuzu", "jaguar", "jeep", "kia",
@@ -52,17 +54,17 @@ class CarInput(BaseModel):
     transmission_type: str
     color: str
 
-app = FastAPI(title="Car Price Predictor API with WhyLogs")
+app = FastAPI(title="Car Price Predictor API with Evidently")
 
 def validate_category(value: str, valid_list: List[str], field_name: str):
     if value not in valid_list:
         raise ValueError(f"Invalid {field_name}: {value}. Valid options are: {valid_list}")
     return value
 
-# health check endpoint
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
 @app.post("/predict")
 async def predict_price(car_input: CarInput):
     try:
@@ -84,21 +86,18 @@ async def predict_price(car_input: CarInput):
         input_data[f"color_{color}"] = 1
 
         input_df = pd.DataFrame([input_data])
-        print(f"Processed input: {input_df}")
-
         prediction = model.predict(input_df)[0]
-
-        # Log with WhyLogs
-        input_df["prediction"] = prediction
-        # why_logger.log_dataframe(input_df, name="car_price_prediction", timestamp=datetime.now())
-        # log to file for now
-        with open("whylogs_output.txt", "a") as f:
-            f.write(f"{datetime.now()}: {input_df.to_dict(orient='records')}\n")
-        # limit to 2 decimal places
         prediction = round(prediction, 2)
-        logging.info(f"Prediction made: {prediction}")
-        
 
+        # === Evidently logging ===
+        input_df["prediction"] = prediction
+        input_df["timestamp"] = datetime.now(timezone.utc).timestamp()
+
+        # Log raw input + prediction to JSONL
+        with open("evidently_input_log.jsonl", "a") as log_file:
+            log_file.write(json.dumps(input_df.to_dict(orient="records")[0]) + "\n")
+
+        logging.info(f"Prediction made: {prediction}")
         return {"predicted_price": prediction}
 
     except ValueError as e:
@@ -107,3 +106,22 @@ async def predict_price(car_input: CarInput):
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
         return {"error": "Internal server error"}
+
+# Optional: add a monitoring dashboard endpoint
+@app.get("/monitor", response_class=HTMLResponse)
+async def generate_monitoring_report():
+    try:
+        df = pd.read_json("evidently_input_log.jsonl", lines=True)
+        report = Report(metrics=[DataDriftPreset()])
+        reference = df.head(50)
+        current = df.tail(50)
+        snapshot = report.run(reference_data=reference, current_data=current)
+        html_report = snapshot.get_html_str(as_iframe=False)
+        with open("monitor_report.html", "w") as report_file:
+            report_file.write(html_report)
+        # return the html
+        return HTMLResponse(content=html_report, status_code=200)
+
+    except Exception as e:
+        logging.error(f"Monitoring error: {e}")
+        return {"error": str(e)}
