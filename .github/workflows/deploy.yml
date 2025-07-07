@@ -16,7 +16,7 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Build Docker image
-      run: docker build -t car-inference-api ./serving
+      run: docker build -t car-inference-api ./
 
     - name: Run container
       run: docker run -d -p 4723:4723 --name car-api car-inference-api
