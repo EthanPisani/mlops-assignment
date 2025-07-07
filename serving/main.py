@@ -107,6 +107,54 @@ async def predict_price(car_input: CarInput):
         logging.error(f"Unexpected error: {e}")
         return {"error": "Internal server error"}
 
+
+class CarInputBatch(BaseModel):
+    cars: List[CarInput]
+
+@app.post("/predict_batch")
+async def predict_batch(car_inputs: CarInputBatch):
+    try:
+        rows = []
+
+        for car_input in car_inputs.cars:
+            # Validate input
+            brand = validate_category(car_input.brand, KNOWN_BRANDS, "brand")
+            fuel = validate_category(car_input.fuel_type, KNOWN_FUEL_TYPES, "fuel_type")
+            transmission = validate_category(car_input.transmission_type, KNOWN_TRANSMISSIONS, "transmission_type")
+            color = validate_category(car_input.color, KNOWN_COLORS, "color")
+
+            # Prepare row
+            input_data = {col: 0 for col in FEATURE_COLUMNS}
+            for col in NUMERIC_COLUMNS:
+                input_data[col] = getattr(car_input, col)
+
+            input_data[f"brand_{brand}"] = 1
+            input_data[f"fuel_type_{fuel}"] = 1
+            input_data[f"transmission_type_{transmission}"] = 1
+            input_data[f"color_{color}"] = 1
+            rows.append(input_data)
+
+        input_df = pd.DataFrame(rows)
+        predictions = model.predict(input_df)
+        predictions = [round(float(p), 2) for p in predictions]
+
+        # Logging each record (optional)
+        input_df["prediction"] = predictions
+        input_df["timestamp"] = datetime.now(timezone.utc).timestamp()
+
+        with open("evidently_input_log.jsonl", "a") as log_file:
+            for record in input_df.to_dict(orient="records"):
+                log_file.write(json.dumps(record) + "\n")
+
+        return {"predicted_prices": predictions}
+
+    except ValueError as e:
+        logging.error(f"Validation error: {e}")
+        return {"error": str(e)}
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        return {"error": "Internal server error"}
+
 # Optional: add a monitoring dashboard endpoint
 @app.get("/monitor", response_class=HTMLResponse)
 async def generate_monitoring_report():
