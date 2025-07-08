@@ -16,36 +16,36 @@ KNOWN_COLORS = [
     "black", "blue", "bronze", "brown", "gold", "green", "grey", "orange", "red", "silver", "violet", "white", "yellow"
 ]
 
-url = "http://localhost:4723/predict"
 headers = {
     "accept": "application/json",
     "Content-Type": "application/json"
 }
 
-# Fixed test case
-def test_predict():
-    data = {
-        "month": 5,
-        "year": 2020,
-        "power_kw": 100,
-        "power_ps": 104,
-        "fuel_consumption_l_100km": 6.5,
-        "fuel_consumption_g_km": 150,
-        "mileage_in_km": 350430,
-        "brand": "bmw",
-        "fuel_type": "Petrol",
-        "transmission_type": "Manual",
-        "color": "red"
-    }
+# === NEW === Batch test function
+def test_batch_predict(batch_size=10):
+    url = "http://localhost:4723/predict_batch"
+    inputs = [generate_random_input() for _ in range(batch_size)]
+    data = {"cars": inputs}
+    start_timer = time.perf_counter()
     response = requests.post(url, headers=headers, json=data)
+    end_timer = time.perf_counter()
+    print(f"Response time Batch: {end_timer - start_timer:.4f} seconds")
     assert response.status_code == 200, f"Expected status code 200 but got {response.status_code}"
-    assert "predicted_price" in response.json(), "Response JSON does not contain 'predicted_price' key"
-    assert isinstance(response.json()["predicted_price"], (int, float)), "Predicted price is not a number"
-    assert response.json()["predicted_price"] > 0, "Predicted price should be a positive number"
-    assert response.json()["predicted_price"] < 100000, "Predicted price seems unreasonably high"
-    print(f"Fixed test passed: {response.json()}")
+    result = response.json()
+    assert "predicted_prices" in result, "Response missing 'predicted_prices'"
+    predictions = result["predicted_prices"]
 
-# Random test generator
+    assert isinstance(predictions, list), "predicted_prices should be a list"
+    assert len(predictions) == batch_size, f"Expected {batch_size} predictions, got {len(predictions)}"
+
+    for i, price in enumerate(predictions):
+        assert isinstance(price, (int, float)), f"Prediction {i} is not a number"
+        assert 0 < price < 100000, f"Prediction {i} out of reasonable range: {price}"
+        print(f"[Batch {i+1}] ✅ {price:.2f} for {inputs[i]['brand']} ({inputs[i]['year']})")
+
+    print(f"\n✔️ Batch test passed for {batch_size} inputs")
+
+# Reuse random input generator
 def generate_random_input():
     return {
         "month": random.randint(1, 12),
@@ -61,7 +61,35 @@ def generate_random_input():
         "color": random.choice(KNOWN_COLORS),
     }
 
+# Fixed single request test
+def test_predict():
+    url = "http://localhost:4723/predict"
+    data = {
+        "month": 5,
+        "year": 2020,
+        "power_kw": 100,
+        "power_ps": 104,
+        "fuel_consumption_l_100km": 6.5,
+        "fuel_consumption_g_km": 150,
+        "mileage_in_km": 350430,
+        "brand": "bmw",
+        "fuel_type": "Petrol",
+        "transmission_type": "Manual",
+        "color": "red"
+    }
+    start_timer = time.perf_counter()
+    response = requests.post(url, headers=headers, json=data)
+    end_timer = time.perf_counter()
+    print(f"Response time Single: {end_timer - start_timer:.4f} seconds")
+    assert response.status_code == 200, f"Expected status code 200 but got {response.status_code}"
+    assert "predicted_price" in response.json(), "Response JSON does not contain 'predicted_price' key"
+    assert isinstance(response.json()["predicted_price"], (int, float)), "Predicted price is not a number"
+    assert 0 < response.json()["predicted_price"] < 100000, "Predicted price out of expected range"
+    print(f"✅ Fixed test passed: {response.json()}")
+
+# Random individual request loop
 def test_random_requests(n=100):
+    url = "http://localhost:4723/predict"
     success_count = 0
     for i in range(n):
         data = generate_random_input()
@@ -71,14 +99,15 @@ def test_random_requests(n=100):
             if isinstance(price, (int, float)) and 0 < price < 100000:
                 print(f"[{i+1}] ✅ {price} - {data['brand']} ({data['year']})")
                 success_count += 1
-            else:
-                print(f"[{i+1}] ❌ Invalid price: {price}")
         else:
             print(f"[{i+1}] ❌ Failed response: {response.status_code} {response.text}")
-        time.sleep(0.1)  # slight delay to prevent overload
-    print(f"\n✔️ {success_count}/{n} requests succeeded")
+        time.sleep(0.1)
+    print(f"\n✔️ {success_count}/{n} random requests succeeded")
 
+# Entry point
 if __name__ == "__main__":
     test_predict()
-    print("Starting 100 randomized test requests...")
+    print("\nStarting 100 randomized single POST requests...")
     test_random_requests(100)
+    print("\nStarting a batch test with 10 inputs...")
+    test_batch_predict(batch_size=10)
