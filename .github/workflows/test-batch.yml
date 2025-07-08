@@ -1,11 +1,14 @@
 name: Test Batch Predictions
 
 on:
-  push:
-    branches: [ main ]
+  workflow_run:
+    workflows: [Build and Publish FastAPI Docker Image]
+    types:
+      - completed
 
 jobs:
   test-batch:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:

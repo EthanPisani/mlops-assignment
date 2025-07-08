@@ -1,11 +1,14 @@
 name: Test 100 Randomized Single Predictions
 
 on:
-  push:
-    branches: [ main ]
+  workflow_run:
+    workflows: [Build and Publish FastAPI Docker Image]
+    types:
+      - completed
 
 jobs:
   test-random:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
