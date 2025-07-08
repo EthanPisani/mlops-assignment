@@ -27,6 +27,14 @@ jobs:
           curl -s http://localhost:4723/health && break || sleep 3
         done
 
-    - name: Test prediction endpoint
-      run: |
-        python testing/ci.py
+    - name: Test single prediction
+      run: python testing/ci.py predict
+
+    - name: Test 100 randomized single POST requests
+      run: python testing/ci.py random
+
+    - name: Test batch prediction (10)
+      run: python testing/ci.py batch --size 10
+
+    - name: Test batch prediction (1000)
+      run: python testing/ci.py batch --size 1000
