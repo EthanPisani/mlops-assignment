@@ -1,11 +1,11 @@
-name: FastAPI Inference CI/CD
+name: Test Single Prediction
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  test-single:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,7 +21,7 @@ jobs:
     - name: Run container
       run: docker run -d -p 4723:4723 --name car-api car-inference-api
 
-    - name: Wait for API to be ready with health check at /health
+    - name: Wait for API to be ready
       run: |
         for i in {1..10}; do
           curl -s http://localhost:4723/health && break || sleep 3
@@ -29,12 +29,3 @@ jobs:
 
     - name: Test single prediction
       run: python testing/ci.py predict
-
-    - name: Test 100 randomized single POST requests
-      run: python testing/ci.py random
-
-    - name: Test batch prediction (10)
-      run: python testing/ci.py batch --size 10
-
-    - name: Test batch prediction (1000)
-      run: python testing/ci.py batch --size 1000

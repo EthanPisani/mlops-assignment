@@ -1,3 +1,4 @@
+# 4. Serving model with FastAPI
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
@@ -65,6 +66,7 @@ def validate_category(value: str, valid_list: List[str], field_name: str):
 async def health():
     return {"status": "ok"}
 
+# real-time prediction endpoint
 @app.post("/predict")
 async def predict_price(car_input: CarInput):
     try:
@@ -89,7 +91,7 @@ async def predict_price(car_input: CarInput):
         prediction = model.predict(input_df)[0]
         prediction = round(prediction, 2)
 
-        # === Evidently logging ===
+        # Evidently logging
         input_df["prediction"] = prediction
         input_df["timestamp"] = datetime.now(timezone.utc).timestamp()
 
@@ -111,6 +113,7 @@ async def predict_price(car_input: CarInput):
 class CarInputBatch(BaseModel):
     cars: List[CarInput]
 
+# 8. Batch prediction endpoint
 @app.post("/predict_batch")
 async def predict_batch(car_inputs: CarInputBatch):
     try:
@@ -138,7 +141,7 @@ async def predict_batch(car_inputs: CarInputBatch):
         predictions = model.predict(input_df)
         predictions = [round(float(p), 2) for p in predictions]
 
-        # Logging each record (optional)
+        # Logging each record 
         input_df["prediction"] = predictions
         input_df["timestamp"] = datetime.now(timezone.utc).timestamp()
 
@@ -155,7 +158,7 @@ async def predict_batch(car_inputs: CarInputBatch):
         logging.error(f"Unexpected error: {e}")
         return {"error": "Internal server error"}
 
-# Optional: add a monitoring dashboard endpoint
+# 7. Evidently for monitoring
 @app.get("/monitor", response_class=HTMLResponse)
 async def generate_monitoring_report():
     try:
