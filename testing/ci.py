@@ -104,10 +104,32 @@ def test_random_requests(n=100):
         time.sleep(0.1)
     print(f"\n✔️ {success_count}/{n} random requests succeeded")
 
-# Entry point
+import argparse
+
+def main():
+    parser = argparse.ArgumentParser(description="Run tests for ML model prediction.")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    subparsers.add_parser("predict", help="Run a single test prediction")
+
+    subparsers.add_parser("random", help="Run 100 randomized single POST requests")
+
+    batch_parser = subparsers.add_parser("batch", help="Run batch test")
+    batch_parser.add_argument("--size", type=int, required=True, help="Batch size")
+
+    args = parser.parse_args()
+
+    if args.command == "predict":
+        test_predict()
+    elif args.command == "random":
+        print("\nStarting 100 randomized single POST requests...")
+        test_random_requests(100)
+    elif args.command == "batch":
+        print(f"\nStarting a batch test with {args.size} inputs...")
+        test_batch_predict(batch_size=args.size)
+
+    print("\nTest(s) completed successfully!")
+
 if __name__ == "__main__":
-    test_predict()
-    print("\nStarting 100 randomized single POST requests...")
-    test_random_requests(100)
-    print("\nStarting a batch test with 10 inputs...")
-    test_batch_predict(batch_size=10)
+    main()
+
